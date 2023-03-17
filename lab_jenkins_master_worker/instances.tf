@@ -36,6 +36,8 @@ resource "aws_instance" "jenkins-master" {
   provisioner "local-exec" {
     command = <<EOF
 aws --profile ${var.profile} ec2 wait instance-status-ok --region ${var.region-master} --instance-ids ${self.id}
+# To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
+export ANSIBLE_CONFIG=./ansible.cfg
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml
 EOF
   }
@@ -74,6 +76,8 @@ resource "aws_instance" "jenkins-worker-oregon" {
   provisioner "local-exec" {
     command = <<EOF
 aws --profile ${var.profile} ec2 wait instance-status-ok --region ${var.region-worker} --instance-ids ${self.id}
+# To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
+export ANSIBLE_CONFIG=./ansible.cfg
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml
 EOF
   }
