@@ -35,24 +35,7 @@ resource "aws_instance" "jenkins-master" {
   subnet_id                   = aws_subnet.subnet_1.id
   provisioner "local-exec" {
     command = <<EOF
-#!/bin/bash
-while true; do
-  import_task_status_command="aws --profile ${var.profile} ec2 wait instance-status-ok --region ${var.region-master} --instance-ids ${self.id}"
-  echo "Running command: $\import_task_status_command"
-  import_task_status=$\($\import_task_status_command)
-  echo "Import task [$\import_task_id] status is [$\import_task_status]."
-
-  if [[ "$\import_task_status" == "" ]]; then
-    echo "Completed, exiting..."
-    break
-  elif [[ "$import_task_status" == "active" ]]; then
-    echo "Waiting 1 minute..."
-    sleep 60
-  else
-    echo "Error, exiting..."
-    exit 1
-  fi
-done
+./script/check_instance_status.sh ${var.profile} ${var.region-master} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
 export ANSIBLE_CONFIG=./ansible.cfg
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml
@@ -92,24 +75,7 @@ resource "aws_instance" "jenkins-worker-oregon" {
 
   provisioner "local-exec" {
     command = <<EOF
-#!/bin/bash
-while true; do
-  import_task_status_command="aws --profile ${var.profile} ec2 wait instance-status-ok --region ${var.region-worker} --instance-ids ${self.id}"
-  echo "Running command: $\import_task_status_command"
-  import_task_status=$\($\import_task_status_command)
-  echo "Import task [$\import_task_id] status is [$\import_task_status]."
-
-  if [[ "$\import_task_status" == "" ]]; then
-    echo "Completed, exiting..."
-    break
-  elif [[ "$\import_task_status" == "active" ]]; then
-    echo "Waiting 1 minute..."
-    sleep 60
-  else
-    echo "Error, exiting..."
-    exit 1
-  fi
-done
+./script/check_instance_status.sh ${var.profile} ${var.region-worker} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
 export ANSIBLE_CONFIG=./ansible.cfg
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml
