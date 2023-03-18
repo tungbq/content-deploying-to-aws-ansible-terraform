@@ -21,3 +21,7 @@ while [[ $RETRIES -lt $MAX_RETRIES ]]; do
     exit 1
   fi
 done
+
+if [[ $RETRIES -eq $MAX_RETRIES ]]; then
+  echo "Command failed after $MAX_RETRIES retries"
+fi
