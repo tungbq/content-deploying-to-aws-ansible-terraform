@@ -33,13 +33,14 @@ resource "aws_instance" "jenkins-master" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.jenkins-sg.id]
   subnet_id                   = aws_subnet.subnet_1.id
-  provisioner "local-exec" {
-    command = <<EOF
+
 # Temporary skip 10 mins for now, to wait for instance come up. Will revist the script later
 # ./script/check_instance_status.sh ${var.profile} ${var.region-master} ${self.id}
-sleep 600
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
-export ANSIBLE_CONFIG=./ansible.cfg
+  provisioner "local-exec" {
+    command = <<EOF
+sleep 600 && \
+export ANSIBLE_CONFIG=./ansible.cfg && \
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml
 EOF
   }
@@ -74,14 +75,13 @@ resource "aws_instance" "jenkins-worker-oregon" {
   #     host        = self.public_ip
   #   }
   # }
-
-  provisioner "local-exec" {
-    command = <<EOF
 # Temporary skip 10 mins for now, to wait for instance come up. Will revist the script later
 # ./script/check_instance_status.sh ${var.profile} ${var.region-worker} ${self.id}
-sleep 600
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
-export ANSIBLE_CONFIG=./ansible.cfg
+  provisioner "local-exec" {
+    command = <<EOF
+sleep 600 && \
+export ANSIBLE_CONFIG=./ansible.cfg && \
 ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml
 EOF
   }
