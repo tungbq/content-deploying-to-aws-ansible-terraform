@@ -34,7 +34,7 @@ resource "aws_instance" "jenkins-master" {
   vpc_security_group_ids      = [aws_security_group.jenkins-sg.id]
   subnet_id                   = aws_subnet.subnet_1.id
 
-# Temporary skip 10 mins for now, to wait for instance come up. Will revist the script later
+# Temporary skip 5 mins for now, to wait for instance come up. Will revist the script later
 # ./script/check_instance_status.sh ${var.profile} ${var.region-master} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
 
@@ -75,7 +75,7 @@ resource "aws_instance" "jenkins-worker-oregon" {
   #     host        = self.public_ip
   #   }
   # }
-# Temporary skip 10 mins for now, to wait for instance come up. Will revist the script later
+# Temporary skip 5 mins for now, to wait for instance come up. Will revist the script later
 # ./script/check_instance_status.sh ${var.profile} ${var.region-worker} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
   provisioner "local-exec" {
