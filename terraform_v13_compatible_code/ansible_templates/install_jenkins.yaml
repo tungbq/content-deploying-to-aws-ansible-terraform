@@ -11,9 +11,11 @@
       vars:
         package:
         - wget
-        - java-1.8.0-openjdk-devel
         - git
       
+    - name: Install java 11
+      shell: sudo amazon-linux-extras install -y java-openjdk11
+
     - name: clone repo
       git:
         repo: https://github.com/linuxacademy/content-terraform-jenkins.git
