@@ -7,12 +7,12 @@
     - name: Installing docker
       ansible.builtin.shell: |
         yum update -y
-        amazon-linux-extras install docker
+        amazon-linux-extras install docker -y
         service docker start
         service docker status
         systemctl enable docker
         usermod -a -G docker ec2-user
-        systemctl enable docker
+        systemctl start docker
 
     - name: Installing jenkins via docker
       ansible.builtin.shell: |

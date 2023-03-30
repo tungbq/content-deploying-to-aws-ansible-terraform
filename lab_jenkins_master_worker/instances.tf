@@ -40,7 +40,7 @@ resource "aws_instance" "jenkins-master" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash" ,"-c"]
-    command = "sleep 300; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml"
+    command = "sleep 200; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml"
     environment = {
       ANSIBLE_CONFIG = "./ansible.cfg"
     }
@@ -79,7 +79,7 @@ resource "aws_instance" "jenkins-worker-oregon" {
 # ./script/check_instance_status.sh ${var.profile} ${var.region-worker} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
   provisioner "local-exec" {
-    command = "sleep 300; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml"
+    command = "sleep 200; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml"
     environment = {
       ANSIBLE_CONFIG = "./ansible.cfg"
     }
