@@ -4,79 +4,32 @@
   remote_user: ec2-user
   become_user: root
   tasks:
-    - name: yum update
-      yum:
-        name: "*"
-        state: latest
+    - name: Installing docker
+      ansible.builtin.shell: |
+        yum update -y
+        amazon-linux-extras install docker
+        service docker start
+        service docker status
+        systemctl enable docker
+        usermod -a -G docker ec2-user
+        systemctl enable docker
 
-    - name: install dependencies
-      yum:
-        name: "{{ package }} "
-        state: present
-      vars:
-        package:
-          - wget
-          - java-1.8.0-openjdk-devel
-          - git
+    - name: Installing jenkins via docker
+      ansible.builtin.shell: |
+        docker pull jenkins/jenkins
+        docker images
 
-    - name: clone repo
-      git:
-        repo: https://github.com/linuxacademy/content-terraform-jenkins.git
-        dest: /tmp/jenkins
-
-    - name: Download Long Term Jenkins release
-      get_url:
-        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
-        dest: /etc/yum.repos.d/jenkins.repo
-
-    - name: Import jenkins key from url
-      ansible.builtin.rpm_key:
-        state: present
-        key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-
-    # - name: Install java
-    #   yum:
-    #     name: java-11-openjdk-devel
-    #     state: present
-
-    - name: Install jenkins
-      yum:
-        name: jenkins
-        state: latest
-
-    - name: Temporarily Stop Jenkins
-      service:
-        name: jenkins
-        state: stopped
-
-    - name: Delete Jenkins default dir
-      file:
-        state: absent
-        path: /var/lib/jenkins
-
-    - name: Copy over cloned Jenkins /var/lib/jenkins
-      copy:
-        remote_src: yes
-        src: /tmp/jenkins/jenkins
-        dest: /var/lib
-
-    - name: Restore jenkins user ownership on /var/lib/jenkins
-      file:
-        path: /var/lib/jenkins
-        state: directory
-        recurse: yes
-        owner: jenkins
-
-    - name: daemon-reload to pick up config changes
-      ansible.builtin.systemd:
-        daemon_reload: yes
-
-    - name: Start jenkins
-      ansible.builtin.systemd:
-        name: jenkins
-        state: started
+    - name: Stop running docker container
+      ansible.builtin.shell: |
+        docker stop jenkins
+        docker ps
+  
+    - name: Start docker container
+      ansible.builtin.shell: |
+        docker run --rm -d --name jenkins -p 8080:8080 -v $PWD/jenkins/ jenkins/jenkins
+        docker ps
 
     - name: Wait until Jenkins is up
-      shell: result_first=1; while [[ $result_first != 0 ]]; do if [[ `grep 'Jenkins is fully up and running' /var/log/jenkins/jenkins.log` ]];then result_first=0;else sleep 4;fi;done
+      shell: result_first=1; while [[ $result_first != 0 ]]; do if [[ docker logs jenkins | grep 'Jenkins is fully up and running' ]];then result_first=0;else sleep 4;fi;done
       register: result
       until: result.rc == 0
