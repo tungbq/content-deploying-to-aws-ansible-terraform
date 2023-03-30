@@ -6,7 +6,7 @@
   tasks:
     - name: yum update
       yum:
-        name: '*'
+        name: "*"
         state: latest
 
     - name: install dependencies
@@ -15,8 +15,9 @@
         state: present
       vars:
         package:
-        - wget
-        - git
+          - wget
+          - java-1.8.0-openjdk-devel
+          - git
 
     - name: clone repo
       git:
@@ -33,33 +34,32 @@
         state: present
         key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 
-    - name: Install java
-      yum:
-        name: java-11-openjdk-devel
-        state: present
+    # - name: Install java
+    #   yum:
+    #     name: java-11-openjdk-devel
+    #     state: present
 
     - name: Install jenkins
       yum:
         name: jenkins
-      state: latest
+        state: latest
 
     - name: Temporarily Stop Jenkins
-      service: 
-        name: jenkins 
+      service:
+        name: jenkins
         state: stopped
-   
+
     - name: Delete Jenkins default dir
       file:
         state: absent
         path: /var/lib/jenkins
-    
+
     - name: Copy over cloned Jenkins /var/lib/jenkins
       copy:
         remote_src: yes
         src: /tmp/jenkins/jenkins
         dest: /var/lib
-        
-         
+
     - name: Restore jenkins user ownership on /var/lib/jenkins
       file:
         path: /var/lib/jenkins
