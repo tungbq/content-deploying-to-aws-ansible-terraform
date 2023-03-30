@@ -23,13 +23,21 @@
       ansible.builtin.shell: |
         docker stop jenkins
         docker ps
-  
+
     - name: Start docker container
       ansible.builtin.shell: |
         docker run --rm -d --name jenkins -p 8080:8080 -v $PWD/jenkins/ jenkins/jenkins
         docker ps
 
     - name: Wait until Jenkins is up
-      shell: result_first=1; while [[ $result_first != 0 ]]; do if [[ docker logs jenkins | grep 'Jenkins is fully up and running' ]];then result_first=0;else sleep 4;fi;done
-      register: result
-      until: result.rc == 0
+      ansible.builtin.shell: |
+        while true ; do 
+          echo "WAIT FOR: Jenkins is fully up and running"
+          result=$(curl -s localhost:8080 | grep -nE "Authentication required")
+          if [ -n "$result" ] ; then
+            echo "COMPLETE! Jenkins is up and running!"
+            break
+          fi
+          ((c++)) && ((c==20)) && break
+          sleep 3
+        done
