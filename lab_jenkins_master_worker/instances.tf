@@ -37,19 +37,19 @@ resource "aws_instance" "jenkins-master" {
 # Temporary skip 10 mins for now, to wait for instance come up. Will revist the script later
 # ./script/check_instance_status.sh ${var.profile} ${var.region-master} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
+
   provisioner "local-exec" {
-    command = <<EOF
-sleep 600 && \
-export ANSIBLE_CONFIG=./ansible.cfg && \
-ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml
-EOF
+    interpreter = ["/bin/bash" ,"-c"]
+    command = "sleep 300; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name}' ansible_templates/install_jenkins.yaml"
+    environment = {
+      ANSIBLE_CONFIG = "./ansible.cfg"
+    }
   }
   tags = {
     Name = "jenkins_master_tf"
   }
   depends_on = [aws_main_route_table_association.set-master-default-rt-assoc]
 }
-
 #Create EC2 in us-west-2
 resource "aws_instance" "jenkins-worker-oregon" {
   provider                    = aws.region-worker
@@ -79,11 +79,10 @@ resource "aws_instance" "jenkins-worker-oregon" {
 # ./script/check_instance_status.sh ${var.profile} ${var.region-worker} ${self.id}
 # To support WSL run, see: https://github.com/ansible/ansible/issues/42388#issuecomment-408774520
   provisioner "local-exec" {
-    command = <<EOF
-sleep 600 && \
-export ANSIBLE_CONFIG=./ansible.cfg && \
-ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml
-EOF
+    command = "sleep 300; ansible-playbook --extra-vars 'passed_in_hosts=tag_Name_${self.tags.Name} master_ip=${aws_instance.jenkins-master.private_ip}' ansible_templates/install_worker.yaml"
+    environment = {
+      ANSIBLE_CONFIG = "./ansible.cfg"
+    }
   }
   tags = {
     Name = join("_", ["jenkins_worker_tf", count.index + 1])
